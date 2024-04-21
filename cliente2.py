@@ -1,5 +1,5 @@
 import sys
-from socket import AF_INET, socket, SOCK_STREAM
+from socket import AF_INET, socket, SOCK_STREAM, gethostname, gethostbyname
 from threading import Thread
 
 
@@ -14,6 +14,7 @@ def verifica_ip(endereco_ip):
 
 def chat():
     mensagem = input()
+    sys.stdout.flush()
     if mensagem is not None:
         con_tcp.send(bytes(mensagem, "utf8"))
 
@@ -30,14 +31,15 @@ def chatrecebe():
 
             
 
-SERVER_PORT = 8001
+SERVER_PORT = 9050
 
 print("Bem vindo ao Chat sem nome no momento!\n")
-ip = input("Entre com o endereço de ip desejado para começar a se comunicar \n")
-
-print("Tentando conectar ao servidor")
-if verifica_ip(ip):
-    print("ip valido!")
+#ip = input("Entre com o endereço de ip desejado para começar a se comunicar \n")
+#ip = gethostbyname(gethostname())
+ip = "191.255.44.63"
+print("Tentando conectar ao servidor: ", ip)
+#if verifica_ip(ip):
+    #print("ip valido!")
 ADDR = (ip, SERVER_PORT)
 con_tcp = socket(AF_INET,SOCK_STREAM)
 con_tcp.connect(ADDR)

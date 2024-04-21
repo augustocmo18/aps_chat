@@ -1,7 +1,7 @@
-from socket import AF_INET, socket, SOCK_STREAM
+from socket import AF_INET, socket, SOCK_STREAM, gethostbyname, gethostname
 from threading import Thread
 
-SERVER_PORT = 8001
+
 
 
 def accept_conexoes():
@@ -23,7 +23,7 @@ def trata_client(client):
         msg = client.recv(1024) 
         if msg != bytes("exit", "utf8"):
             broadcast(msg, name + ": ")
-            print(name, " - mandou a seguinte msg: ", bytes(msg, "utf8"))
+            print(name, " - mandou a seguinte msg: ", msg)
         else:   
             client.send(bytes("exit", "utf8"))
             client.close()
@@ -41,16 +41,16 @@ def broadcast(msg, prefix=""):
 clients = {}
 enderecos = {}
 
-
-HOST = "127.0.0.1"
-ADDR = (HOST, SERVER_PORT)
+SERVER_PORT = 9150
+#HOST = gethostbyname(gethostname())
+#print("host: ", HOST)
+ADDR = ("", SERVER_PORT)
 
 SERVER = socket(AF_INET, SOCK_STREAM)
 
 SERVER.bind(ADDR)
 
-
-SERVER.listen(1)
+SERVER.listen(5)
 print("Aguardando conexão...")
 ACCEPT_THREAD = Thread(target=accept_conexoes)
 ACCEPT_THREAD.start()

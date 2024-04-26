@@ -12,7 +12,7 @@ def accept_conexoes():
 
 
 def trata_client(client):
-    name = client.recv(1024).decode("utf8")
+    name = client.recv(650724).decode("utf8")
     client.send(bytes(name + " está online!", "utf8"))
     msg = "%s entrou no chat!" % name
     broadcast(bytes(msg, "utf8"))
@@ -20,10 +20,17 @@ def trata_client(client):
     clients[client] = name
 
     while True:
-        msg = client.recv(1024) 
+        msg = client.recv(650724) 
         if msg != bytes("exit", "utf8"):
-            broadcast(msg, name + ": ")
-            print(name, " - mandou a seguinte msg: ", msg)
+            if msg.startswith(b"IMAGE:"):
+                
+                broadcastimg(msg)
+                #broadcast(b"", name + " enviou uma imagem.")
+                print(name, " - enviou uma imagem")
+                return
+            else:
+                broadcast(msg, name + ": ")
+                print(name, " - mandou a seguinte msg: ", msg)
         else:   
             client.send(bytes("exit", "utf8"))
             client.close()
@@ -36,6 +43,13 @@ def trata_client(client):
 def broadcast(msg, prefix=""):
     for sock in clients:
         sock.send(bytes(prefix, "utf8") + msg)
+
+def broadcastimg(msg):
+    for sock in clients:
+        print("Server msg len", len(msg))
+        sock.send(msg)
+
+        
 
 
 clients = {}

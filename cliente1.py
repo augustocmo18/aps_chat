@@ -1,9 +1,61 @@
 from socket import AF_INET, socket, SOCK_STREAM, gethostname, gethostbyname
 from threading import Thread
+from PIL import Image, ImageTk
+import io
 import tkinter
+from tkinter import filedialog
+import base64
 
 ip = None
 msg = None
+
+def send_message(message):
+    con_tcp.send(bytes(message, "utf8"))
+
+def send_image():
+    if image_path:
+        with open(image_path, "rb") as image_file:
+            image_data = image_file.read()
+            encoded_image = base64.b64encode(image_data)
+            # encoded_image_pad = add_padding(encoded_image)
+            con_tcp.send(b"IMAGE:" + encoded_image)
+            return  
+    else:
+        msg_list.insert(tkinter.END, "SISTEMA: Nenhuma imagem selecionada!")
+
+def add_padding(encoded_image):
+    try:
+        missing_padding = len(encoded_image) % 4
+        if missing_padding != 0:
+            encoded_image += '=' * (4 - missing_padding)
+        return encoded_image
+    except Exception as e:
+        print("Error adding padding:", e)
+        return None
+
+
+
+def display_image(encoded_image):
+    try:
+        image_data = base64.b64decode(encoded_image)
+        image_stream = io.BytesIO(image_data)
+        image = Image.open(image_stream)
+        root = tkinter.Tk()
+        photo = ImageTk.PhotoImage(image)
+        image_label = tkinter.Label(root, image=photo)
+        image_label.photo = photo 
+        image_label.pack()
+        def close_img():
+            root.quit()
+            root.destroy()
+        root.protocol("WM_DELETE_WINDOW", close_img)
+        root.mainloop()
+    except Exception as e:
+        print("Error displaying image:", e)
+
+def set_image_path():
+    global image_path
+    image_path = filedialog.askopenfilename()
 
 def chat():
     mensagem.set(e_mensagem.get())
@@ -12,23 +64,30 @@ def chat():
         if (msg.lower() == 'exit'):
             fecha()
             return
-        con_tcp.send(bytes(msg, "utf8"))
+        send_message(msg)
         e_mensagem.delete(0, tkinter.END)
-
-
 
 def chatrecebe():
         while True:
             try:
-                recv_mens = con_tcp.recv(1024).decode("utf8") 
-                if len(recv_mens) > 1:
-                    msg_list.insert(tkinter.END, recv_mens)
-                    print(recv_mens)
+                recv_broad = con_tcp.recv(650724).decode("utf8")
+                if recv_broad:
+                    if recv_broad.startswith("IMAGE:"):
+                        image_data = recv_broad[len("IMAGE:"):]
+                        display_image(image_data)
+                        return
+                    else:
+                        if len(recv_broad) > 1:
+                            msg_list.insert(tkinter.END, recv_broad)
+                            print(recv_broad)
             except OSError:
-                 break
+                break
+
+
+
+
 
 def fecha():
-    """Essa funcão é chamada quando a janela é fechada"""
     mensagem.set("exit")
     msg = mensagem.get()
     con_tcp.send(bytes(msg, "utf8"))
@@ -47,6 +106,7 @@ def get_ip():
     global ip
     return ip
     
+
      
 
 #interface grafica
@@ -57,6 +117,7 @@ windowip.geometry("230x150")  # tamanho e psocionamento
 windowip.resizable(False, False)
 
 windowip.protocol("WM_DELETE_WINDOW", fecha)
+
 
 ips = tkinter.StringVar()  # declarando o tipo do campo mensagem
 l_digiteip = tkinter.Label(windowip, text="Digite o ip do servidor: ", font="Ubuntu 14", height=2, bg="#ffffff")
@@ -92,8 +153,14 @@ b_enviar = tkinter.Button(window, text="Enviar Mensagem", font="Ubuntu 14 bold",
                           relief="groove", fg="#483659", command=chat)
 b_sair = tkinter.Button(window, text="Exit", font="Ubuntu 14 bold", fg="red", border=3, relief='groove',
                         command=fecha)
+b_set_image_path = tkinter.Button(window, text="Escolher Imagem", font="Ubuntu 14 bold", height=1, border=3,
+                                   relief="groove", fg="#483659", command=set_image_path)
+b_img = tkinter.Button(window, text="Enviar Imagem", font="Ubuntu 14 bold", height=1, border=3,
+                                   relief="groove", fg="#483659", command=send_image)
 
 
+b_img.grid(row=30, sticky='e', padx=5, pady=5)
+b_set_image_path.grid(row=30, sticky='w', padx=5, pady=5)
 scrollbar.grid()
 msg_list.grid(row=2, column=0)
 campo_conversa.grid(row=2, column=1)

@@ -41,10 +41,10 @@ def broadcast(msg, prefix=""):
 clients = {}
 enderecos = {}
 
-SERVER_PORT = 9150
-#HOST = gethostbyname(gethostname())
-#print("host: ", HOST)
-ADDR = ("", SERVER_PORT)
+SERVER_PORT = 9050
+HOST = gethostbyname(gethostname())
+print("host: ", HOST)
+ADDR = (HOST, SERVER_PORT)
 
 SERVER = socket(AF_INET, SOCK_STREAM)
 

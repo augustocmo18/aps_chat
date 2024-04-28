@@ -2,14 +2,12 @@ from socket import AF_INET, socket, SOCK_STREAM, gethostbyname, gethostname
 from threading import Thread
 
 
-
-
 def accept_conexoes():
     while True:
         client, client_address = SERVER.accept()
         enderecos[client] = client_address
         Thread(target=trata_client, args=(client,)).start()
-
+        print("CLIENTE CONECTADO")
 
 def trata_client(client):
     name = client.recv(650724).decode("utf8")
@@ -23,14 +21,12 @@ def trata_client(client):
         msg = client.recv(650724) 
         if msg != bytes("exit", "utf8"):
             if msg.startswith(b"IMAGE:"):
-                
+                broadcast(b"Mandou uma imagem", name + ":")
                 broadcastimg(msg)
-                #broadcast(b"", name + " enviou uma imagem.")
-                print(name, " - enviou uma imagem")
-                return
+                print(name, " - ENVIOU UMA IMAGEM")
             else:
                 broadcast(msg, name + ": ")
-                print(name, " - mandou a seguinte msg: ", msg)
+                print(name, " - MANDOU A SEGUINTE MSG: ", msg)
         else:   
             client.send(bytes("exit", "utf8"))
             client.close()
@@ -39,18 +35,13 @@ def trata_client(client):
             print(name, " - SAIU DO SERVER")
             break
 
-
 def broadcast(msg, prefix=""):
     for sock in clients:
         sock.send(bytes(prefix, "utf8") + msg)
 
 def broadcastimg(msg):
     for sock in clients:
-        print("Server msg len", len(msg))
         sock.send(msg)
-
-        
-
 
 clients = {}
 enderecos = {}
